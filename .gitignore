@@ -128,6 +128,8 @@ dmypy.json
 # Pyre type checker
 .pyre/
 config.py
+test_bot.py
+test_db.py
 *.name
 *.xml
 *.save
