@@ -130,6 +130,7 @@ dmypy.json
 config.py
 test_bot.py
 test_db.py
+univision.db
 *.name
 *.xml
 *.save
