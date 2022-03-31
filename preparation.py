@@ -75,10 +75,13 @@ def _get_all_vote_db(event_id):
     :param event_id:
     :return:
     """
+#     query = """SELECT votes.telegram_chat_id, users.faculty_id as ot_kogo, votes.faculty_id as za_kogo  FROM votes
+# INNER JOIN users ON votes.telegram_chat_id = users.tg_chat_id
+# WHERE users.faculty_id= (SELECT iif((SELECT count(users.tg_chat_id)  FROM users WHERE tg_chat_id=votes.telegram_chat_id) = 2, 20, users.faculty_id)) AND votes.event_id={}""".format(
+#         event_id)
     query = """SELECT votes.telegram_chat_id, users.faculty_id as ot_kogo, votes.faculty_id as za_kogo  FROM votes
 INNER JOIN users ON votes.telegram_chat_id = users.tg_chat_id
-WHERE users.faculty_id= (SELECT iif((SELECT count(users.tg_chat_id)  FROM users WHERE tg_chat_id=votes.telegram_chat_id) = 2, 20, users.faculty_id)) AND votes.event_id={}""".format(
-        event_id)
+WHERE users.faculty_id=(CASE WHEN (SELECT count(users.tg_chat_id)  FROM users WHERE tg_chat_id=votes.telegram_chat_id) = 2 THEN 20 ELSE users.faculty_id END) AND votes.event_id={}""".format(event_id)
     raw_result = db.execute_read_query(query)
     result = {}
 
