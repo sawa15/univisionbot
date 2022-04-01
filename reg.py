@@ -23,11 +23,11 @@ def write_register_info(tg_chat_id, faculty_id, group):
                                                                                                    faculty_id, group)
     db.execute_query(query)
 
-def back_to_start(message: Message, bot: TeleBot):
+def back_to_start(tg_chat_id, bot: TeleBot):
     markup = types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=False)
     markup.add(types.KeyboardButton('👤 Я сотрудник'))
     markup.add(types.KeyboardButton('👨‍🎓 I am a foreign student'))
-    bot.send_message(message.chat.id, answ.need_registartion, parse_mode="MarkdownV2",
+    bot.send_message(tg_chat_id, answ.need_registartion, parse_mode="MarkdownV2",
                      reply_markup=markup)
 
 def get_faculty_by_group(group):

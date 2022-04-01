@@ -99,7 +99,7 @@ class LocalCache:
     def _reset_helper(self):
         event = _get_current_event_db()
         if event is None:
-            admin.alarma("голосование закрыто")
+            print("голосование закрыто")
             return None
         faculties = _get_faculty_from_list_id_db(event[5])
         admin.alarma("открыто голосование id:{} \"{}\"\nзакроется через {}".format(event[0], event[1],
@@ -130,7 +130,7 @@ class LocalCache:
             self.finished_voting = _get_list_finished_voting_db(self.event_id)
             self.all_vote_list = _get_all_vote_db(self.event_id)
 
-    def reset(self):  # переписать
+    def reset(self):
         result = self._reset_helper()
         self.admins = _get_admins()
         self.allfaculties = _get_all_faculties()
@@ -225,7 +225,6 @@ class LocalCache:
         return len(self.all_vote_list[str(tg_chat_id)])
 
     def delete_last_vote(self, tg_chat_id):
-        print("типа удалили последний голос")
         if self.get_num_voting_records(tg_chat_id) == 0:
             return False
 

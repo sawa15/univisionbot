@@ -8,6 +8,7 @@ from telebot.types import Message
 import db
 import admin
 import reg
+import result
 from preparation import LocalCache
 import answer
 import config
@@ -64,9 +65,9 @@ def get_faculty_keyboard(event_id, tg_chat_id, row_width=3):
                    faculties[i * row_width:i * row_width + row_width]]
             markup.add(*row)
     if num_voting_records > 0:
-        del_button = types.InlineKeyboardButton("Отменить последний выбор", callback_data="del__{}".format(event_id))
+        del_button = types.InlineKeyboardButton("⏪ Отменить последний выбор", callback_data="del__{}".format(event_id))
         markup.add(del_button)
-        conf_button = types.InlineKeyboardButton("Завершить голосование", callback_data="conf__{}".format(event_id))
+        conf_button = types.InlineKeyboardButton("☑️ Завершить голосование", callback_data="conf__{}".format(event_id))
         markup.add(conf_button)
 
 
@@ -152,6 +153,17 @@ def resetlc_handler(message):
         bot.send_message(message.chat.id, "Эта команда не для тебя", reply_markup=answ.start_button())
 
 
+@bot.message_handler(commands=['result'])
+def resetlc_handler(message):
+    if str(message.chat.id) in lc.admins:
+        result.get()
+        f = open('votes.csv', encoding="utf-8")
+        bot.send_document(message.chat.id, f, reply_markup=answ.start_button())
+        f.close()
+    else:
+        bot.send_message(message.chat.id, "Эта команда не для тебя", reply_markup=answ.start_button())
+
+
 # Регистрация студентов, КИОшников и сотрудников
 def register_handler_student(message):
     id = reg.get_faculty_by_group(message.text)
@@ -204,7 +216,7 @@ def register_handler_student_kio(message):
         return
     # вернуться в начало
     elif id == -1:
-        reg.back_to_start(message, bot)
+        reg.back_to_start(message.chat.id, bot)
         bot.register_next_step_handler(message, register_handler_student)
         return
     print(u"{} --- {} + КИО id:{} {} {} {}".format(message.text, lc.get_faculty_from_id_global(id), id,
@@ -219,7 +231,7 @@ def register_handler_student_kio(message):
 
 def register_handler_student_empl(message):
     if message.text == '⏪ Отмена':
-        reg.back_to_start(message, bot)
+        reg.back_to_start(message.chat.id, bot)
         bot.register_next_step_handler(message, register_handler_student)
         return
     print(u"Сотрудник --- {} {} {}".format(message.chat.username, message.chat.first_name, message.chat.last_name))
@@ -246,7 +258,7 @@ def all_inspections(event_id, tg_chat_id):
 def start(message: Message):
     if message.text == "\U0001f7e2 Голосовать!":
         if not reg.is_registered(message.chat.id):
-            reg.back_to_start(message, bot)
+            reg.back_to_start(message.chat.id, bot)
             bot.register_next_step_handler(message, register_handler_student)
             return
 
@@ -273,6 +285,12 @@ def callback_query(call):
     if not all_inspections(event_id, call.from_user.id) or not event_id == int(call_event_id):
         bot.answer_callback_query(call.id, answ.error)
         return
+    if not reg.is_registered(call.from_user.id):
+        bot.answer_callback_query(call.id, answ.error)
+        reg.back_to_start(call.from_user.id, bot)
+        bot.register_next_step_handler(call.message, register_handler_student)
+        return
+
 
 
     check_vote = lc.take_a_vote(call.from_user.id, call_faculty_id,
@@ -306,6 +324,11 @@ def confirmation(call):
     if lc.get_num_voting_records(call.from_user.id) == 0:
         bot.answer_callback_query(call.id, "❌ Проголосуй за кого-нибудь")
         return
+    if not reg.is_registered(call.from_user.id):
+        bot.answer_callback_query(call.id, answ.error)
+        reg.back_to_start(call.from_user.id, bot)
+        bot.register_next_step_handler(call.message, register_handler_student)
+        return
 
 
     if lc.confirm_vote(call.from_user.id):
@@ -327,6 +350,11 @@ def delete_last(call):
         return
     if not str(call_event_id) == str(lc.event_id):
         bot.answer_callback_query(call.id, "❌ Произошла ошибка")
+        return
+    if not reg.is_registered(call.from_user.id):
+        bot.answer_callback_query(call.id, answ.error)
+        reg.back_to_start(call.from_user.id, bot)
+        bot.register_next_step_handler(call.message, register_handler_student)
         return
     if lc.delete_last_vote(call.from_user.id):
         bot.answer_callback_query(call.id, "Удалён последний вариант")
