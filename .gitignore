@@ -128,8 +128,9 @@ dmypy.json
 # Pyre type checker
 .pyre/
 config.py
-test_bot.py
-test_db.py
+test/test_bot.py
+test/test_db.py
+test/
 univision.db
 *.name
 *.xml

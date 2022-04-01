@@ -179,7 +179,7 @@ def register_handler_student(message):
         bot.register_next_step_handler(message, register_handler_student_kio)
         return
 
-    print("{} --- {} id:{} {} {} {}".format(message.text, lc.get_faculty_from_id_global(id), id, message.chat.username,
+    print(u"{} --- {} id:{} {} {} {}".format(message.text, lc.get_faculty_from_id_global(id), id, message.chat.username,
                                             message.chat.first_name, message.chat.last_name))
     bot.send_message(message.chat.id, "Поздравляю, ты справился с вводом номера группы. Жми на кнопку",
                      reply_markup=answ.start_button(), parse_mode="Markdown")
@@ -207,7 +207,7 @@ def register_handler_student_kio(message):
         reg.back_to_start(message, bot)
         bot.register_next_step_handler(message, register_handler_student)
         return
-    print("{} --- {} + КИО id:{} {} {} {}".format(message.text, lc.get_faculty_from_id_global(id), id,
+    print(u"{} --- {} + КИО id:{} {} {} {}".format(message.text, lc.get_faculty_from_id_global(id), id,
                                                   message.from_user.username, message.chat.first_name,
                                                   message.chat.last_name))
     bot.send_message(message.chat.id,
@@ -222,7 +222,7 @@ def register_handler_student_empl(message):
         reg.back_to_start(message, bot)
         bot.register_next_step_handler(message, register_handler_student)
         return
-    print("Сотрудник --- {} {} {}".format(message.chat.username, message.chat.first_name, message.chat.last_name))
+    print(u"Сотрудник --- {} {} {}".format(message.chat.username, message.chat.first_name, message.chat.last_name))
     bot.send_message(message.chat.id, "Ура, можно перейти к голосованию\. Жми на кнопку",
                      reply_markup=answ.start_button(), parse_mode="MarkdownV2")
     reg.write_register_info(message.chat.id, 31, message.text)
@@ -280,7 +280,7 @@ def callback_query(call):
                              call.from_user.username, call_event_id)
     if check_vote:
         bot.answer_callback_query(call.id, "✅ {}".format(lc.get_faculty_from_id(call_faculty_id)))
-        print("@{username} проголосовал за {data} {first_name} {last_name} id:{id}".format(
+        print(u"@{username} проголосовал за {data} {first_name} {last_name} id:{id}".format(
             data=lc.get_faculty_from_id(call_faculty_id),
             username=call.from_user.username,
             first_name=call.from_user.first_name,
