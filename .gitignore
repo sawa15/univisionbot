@@ -137,3 +137,4 @@ univision.db
 *.save
 *.iml
 *.patch
+identifier.sqlite
