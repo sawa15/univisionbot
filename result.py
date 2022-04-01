@@ -1,13 +1,12 @@
 import db
 import codecs
 
-def get():
-    print('получаем результаты')
+def get(event_id):
     query = """SELECT votes.telegram_chat_id, votes.name, f1.name AS za_kogo, f2.name AS ot_kogo, (SELECT count(users.tg_chat_id)  FROM users WHERE tg_chat_id=votes.telegram_chat_id) FROM votes
     INNER JOIN users ON votes.telegram_chat_id = users.tg_chat_id
     INNER JOIN faculties f1 ON votes.faculty_id  = f1.id
     INNER JOIN faculties f2 ON users.faculty_id  = f2.id
-    WHERE users.faculty_id=(CASE WHEN (SELECT count(users.tg_chat_id)  FROM users WHERE tg_chat_id=votes.telegram_chat_id) = 2 THEN 20 ELSE users.faculty_id END) AND votes.event_id=2;"""
+    WHERE users.faculty_id=(CASE WHEN (SELECT count(users.tg_chat_id)  FROM users WHERE tg_chat_id=votes.telegram_chat_id) = 2 THEN 20 ELSE users.faculty_id END) AND votes.event_id={};""".format(event_id)
     # query = "SELECT sqlite_version()"
     result = db.execute_read_query(query)
     # перевариваем запрос из базы

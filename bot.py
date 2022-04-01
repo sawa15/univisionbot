@@ -154,9 +154,16 @@ def resetlc_handler(message):
 
 
 @bot.message_handler(commands=['result'])
-def resetlc_handler(message):
+def resetlc_handler(message: Message):
     if str(message.chat.id) in lc.admins:
-        result.get()
+        data = message.text.split(' ')
+        if not len(data) == 2:
+            bot.send_message(message.chat.id, "введи id голосовани /result <id>", reply_markup=answ.start_button())
+            return
+        if not data[1].isnumeric():
+            bot.send_message(message.chat.id, "в аргументе должно быть число", reply_markup=answ.start_button())
+            return
+        result.get(2)
         f = open('votes.csv', encoding="utf-8")
         bot.send_document(message.chat.id, f, reply_markup=answ.start_button())
         f.close()
