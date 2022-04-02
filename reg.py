@@ -8,8 +8,14 @@ import db
 
 answ = Answers()
 
-def meme(message: Message, bot: TeleBot):
-    bot.send_message(message.chat.id, "Охуеть")
+def mailing(tg_chat_id):
+    query = 'SELECT * FROM mailing WHERE tg_chat_id="{}"'.format(tg_chat_id)
+    res = db.execute_read_query(query)
+    if len(res) == 0:
+        query = 'INSERT INTO mailing ("tg_chat_id") VALUES (\'{}\');'.format(tg_chat_id)
+        db.execute_query(query)
+
+
 
 
 def is_registered(tg_chat_id):

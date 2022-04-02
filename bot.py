@@ -136,6 +136,7 @@ def edit_vote_message(event_id, call, keyboard_width):
 @bot.message_handler(commands=['help', 'start', 'reset'])
 def send_welcome(message):
     bot.send_message(message.chat.id, answ.start_text, reply_markup=answ.start_button())
+    reg.mailing(message.chat.id)
     if str(message.chat.id) in lc.admins:
         db.execute_query(
             "DELETE FROM votes WHERE telegram_chat_id='{}' AND event_id='{}'".format(message.chat.id, lc.event_id))
