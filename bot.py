@@ -243,7 +243,7 @@ def register_handler_student(message):
         bot.register_next_step_handler(message, register_handler_student_kio)
         return
 
-    print(u"{} --- {} id:{} {} {} {}".format(message.text, lc.get_faculty_from_id_global(id), id, message.chat.username,
+    print(u"{} --- {} @{} {} {}".format(message.text, lc.get_faculty_from_id_global(id), message.chat.username,
                                             message.chat.first_name, message.chat.last_name))
     bot.send_message(message.chat.id, "Поздравляю, ты справился с вводом номера группы. Жми на кнопку",
                      reply_markup=answ.start_button(), parse_mode="Markdown")
@@ -271,7 +271,7 @@ def register_handler_student_kio(message):
         reg.back_to_start(message.chat.id, bot)
         bot.register_next_step_handler(message, register_handler_student)
         return
-    print(u"{} --- {} + КИО id:{} {} {} {}".format(message.text, lc.get_faculty_from_id_global(id), id,
+    print(u"{} --- {} + КИО @{} {} {}".format(message.text, lc.get_faculty_from_id_global(id),
                                                   message.from_user.username, message.chat.first_name,
                                                   message.chat.last_name))
     bot.send_message(message.chat.id,
@@ -286,7 +286,7 @@ def register_handler_student_empl(message):
         reg.back_to_start(message.chat.id, bot)
         bot.register_next_step_handler(message, register_handler_student)
         return
-    print(u"Сотрудник --- {} {} {}".format(message.chat.username, message.chat.first_name, message.chat.last_name))
+    print(u"Сотрудник --- @{} {} {}".format(message.chat.username, message.chat.first_name, message.chat.last_name))
     bot.send_message(message.chat.id, "Ура, можно перейти к голосованию\. Жми на кнопку",
                      reply_markup=answ.start_button(), parse_mode="MarkdownV2")
     reg.write_register_info(message.chat.id, 31, message.text)
