@@ -163,12 +163,12 @@ class LocalCache:
         :return:
         """
         if self.event_id is None:
-            if not self.reset():
-                return None
+            # if not self.reset():
+            return None
 
         if not ((datetime.utcnow() > self.event_start) and (datetime.utcnow() < self.event_stop)):
-            if not self.reset():
-                return None
+            # if not self.reset():
+            return None
 
         return self.event_id
 
