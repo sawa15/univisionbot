@@ -178,12 +178,12 @@ def vstart_handler(message: Message):
         command = data[0]
         if not len(data) == 2:
             # можно будет выводить в будущем список эвентов
-            bot.send_message(message.chat.id, "введи id голосования /{} <id>".format(command), reply_markup=answ.start_button())
+            bot.send_message(message.chat.id, "введи id голосования {} <id>".format(command), reply_markup=answ.start_button())
             return
         if not data[1].isnumeric():
             bot.send_message(message.chat.id, "в аргументе должно быть число", reply_markup=answ.start_button())
             return
-        if command == 'vstart':
+        if command == '/vstart':
             lc.start_voting(data[1])
         else:
             lc.stop_voting(data[1])
