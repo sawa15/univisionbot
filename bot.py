@@ -154,21 +154,65 @@ def resetlc_handler(message):
 
 
 @bot.message_handler(commands=['result'])
-def resetlc_handler(message: Message):
+def result_handler(message: Message):
     if str(message.chat.id) in lc.admins:
         data = message.text.split(' ')
         if not len(data) == 2:
-            bot.send_message(message.chat.id, "введи id голосовани /result <id>", reply_markup=answ.start_button())
+            # можно будет выводить в будущем список эвентов
+            bot.send_message(message.chat.id, "введи id голосования /result <id>", reply_markup=answ.start_button())
             return
         if not data[1].isnumeric():
             bot.send_message(message.chat.id, "в аргументе должно быть число", reply_markup=answ.start_button())
             return
-        result.get(2)
+        result.get(data[1])
         f = open('votes.csv', encoding="utf-8")
         bot.send_document(message.chat.id, f, reply_markup=answ.start_button())
         f.close()
     else:
         bot.send_message(message.chat.id, "Эта команда не для тебя", reply_markup=answ.start_button())
+
+@bot.message_handler(commands=['vstart', 'vstop'])
+def vstart_handler(message: Message):
+    if str(message.chat.id) in lc.admins:
+        data = message.text.split(' ')
+        command = data[0]
+        if not len(data) == 2:
+            # можно будет выводить в будущем список эвентов
+            bot.send_message(message.chat.id, "введи id голосования /{} <id>".format(command), reply_markup=answ.start_button())
+            return
+        if not data[1].isnumeric():
+            bot.send_message(message.chat.id, "в аргументе должно быть число", reply_markup=answ.start_button())
+            return
+        if command == 'vstart':
+            lc.start_voting(data[1])
+        else:
+            lc.stop_voting(data[1])
+        bot.send_message(message.chat.id, "/reset", reply_markup=answ.start_button())
+
+    else:
+        bot.send_message(message.chat.id, "Эта команда не для тебя", reply_markup=answ.start_button())
+
+
+
+@bot.message_handler(commands=['admin'])
+def result_handler(message: Message):
+    return
+
+    if not (str(message.chat.id) in lc.admins):
+        bot.send_message(message.chat.id, "Эта команда не для тебя", reply_markup=answ.start_button())
+        return
+
+    text = ""
+    if lc.check_current_event() is None:
+        text += 'Голосование сейчас закрыто\n\n'
+    else:
+        text += 'Открыто голосование "{name}"\nid: {id}\n\n'.format(name=lc.event_name, id=lc.event_id)
+
+    text += 'получить результаты голосования: /result <id>\n'
+    text += 'позже тут будет список всех голосований из базы\n\n'
+
+    bot.send_message(message.chat.id, "акт", reply_markup=answ.start_button())
+
 
 
 # Регистрация студентов, КИОшников и сотрудников
@@ -340,7 +384,7 @@ def confirmation(call):
 
     if lc.confirm_vote(call.from_user.id):
         bot.answer_callback_query(call.id, "✅ Ваше голосование сохранено (нет)")
-        bot.send_message(call.from_user.id, "Спасибо, что проголосовали \n\nА пока мы считаем все голоса, можете изучить сайт нашего спонсора example.com", reply_markup=answ.start_button())
+        bot.send_message(call.from_user.id, "Спасибо, что проголосовали \n\nА пока мы считаем голоса, можете познакомиться с партнёрской студией трансляций, которая помогла нам сегодня показать участников во всей красе: bzstream.ru", reply_markup=answ.start_button())
     else:
         bot.answer_callback_query(call.id, "❌ Повторно сохранить нельзя")
     bot.delete_message(call.from_user.id, call.message.id)

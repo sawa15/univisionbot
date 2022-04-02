@@ -1,6 +1,6 @@
 import admin
 import db
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 
 # загрузка данных из базы
@@ -236,12 +236,25 @@ class LocalCache:
             self.all_vote_list[str(tg_chat_id)].append(faculty_id)
             return False
 
+    def start_voting(self, event_id):
+        start = (datetime.now(timezone.utc) - timedelta(seconds=1)).strftime("%Y-%m-%d %H:%M:%S")
+        stop = (datetime.now(timezone.utc) + timedelta(minutes=40)).strftime("%Y-%m-%d %H:%M:%S")
+        query = "UPDATE OR IGNORE events SET start = '{}', stop = '{}' WHERE id={};".format(start, stop, event_id)
+        self.reset()
+    def stop_voting(self, event_id):
+        stop = (datetime.now(timezone.utc) - timedelta(seconds=1)).strftime("%Y-%m-%d %H:%M:%S")
+        query = "UPDATE OR IGNORE events SET stop = '{}' WHERE id={};".format(stop, event_id)
+        self.reset()
+
 
 if __name__ == '__main__':
-    lc = LocalCache()
-    print(_get_all_vote_db(2))
-    lc.take_a_vote(52899166, 1, "name", "username", 4)
-    print(lc.all_vote_list)
+    print((datetime.now(timezone.utc) + timedelta(minutes=40)).strftime("%Y-%m-%d %H:%M:%S"))
+    print(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
+
+    # lc = LocalCache()
+    # print(_get_all_vote_db(2))
+    # lc.take_a_vote(52899166, 1, "name", "username", 4)
+    # print(lc.all_vote_list)
     # print(lc.event_id)
     # print(lc.event_name)
     # print(lc.event_start)
