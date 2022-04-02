@@ -240,10 +240,12 @@ class LocalCache:
         start = (datetime.now(timezone.utc) - timedelta(seconds=1)).strftime("%Y-%m-%d %H:%M:%S")
         stop = (datetime.now(timezone.utc) + timedelta(minutes=40)).strftime("%Y-%m-%d %H:%M:%S")
         query = "UPDATE OR IGNORE events SET start = '{}', stop = '{}' WHERE id={};".format(start, stop, event_id)
+        db.execute_query(query)
         self.reset()
     def stop_voting(self, event_id):
         stop = (datetime.now(timezone.utc) - timedelta(seconds=1)).strftime("%Y-%m-%d %H:%M:%S")
         query = "UPDATE OR IGNORE events SET stop = '{}' WHERE id={};".format(stop, event_id)
+        db.execute_query(query)
         self.reset()
 
 
