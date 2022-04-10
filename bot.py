@@ -386,7 +386,7 @@ def confirmation(call):
     if lc.confirm_vote(call.from_user.id):
         bot.answer_callback_query(call.id, "✅ Ваше голосование сохранено (нет)")
         sponsor = "\n\nА пока мы считаем голоса, можете познакомиться с партнёрской студией трансляций, которая помогла нам сегодня показать участников во всей красе: bzstream.ru"
-        sponsor = ""
+        #sponsor = ""
         bot.send_message(call.from_user.id, "Спасибо, что проголосовали{}".format(sponsor), reply_markup=answ.start_button())
     else:
         bot.answer_callback_query(call.id, "❌ Повторно сохранить нельзя")
