@@ -139,3 +139,4 @@ test/
 *.patch
 identifier.sqlite
 *.csv
+stBase.txt
