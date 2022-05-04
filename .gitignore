@@ -131,7 +131,7 @@ config.py
 test/test_bot.py
 test/test_db.py
 test/
-univision.db
+*.db
 *.name
 *.xml
 *.save
