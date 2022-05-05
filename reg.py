@@ -1,4 +1,3 @@
-
 from telebot import types
 from telebot.types import Message
 from telebot import TeleBot
@@ -8,14 +7,13 @@ import db
 
 answ = Answers()
 
+
 def mailing(tg_chat_id):
     query = 'SELECT * FROM mailing WHERE tg_chat_id="{}"'.format(tg_chat_id)
     res = db.execute_read_query(query)
     if len(res) == 0:
         query = 'INSERT INTO mailing ("tg_chat_id") VALUES (\'{}\');'.format(tg_chat_id)
         db.execute_query(query)
-
-
 
 
 def is_registered(tg_chat_id):
@@ -25,9 +23,17 @@ def is_registered(tg_chat_id):
 
 
 def write_register_info(tg_chat_id, faculty_id, group):
-    query = "INSERT INTO users (tg_chat_id, faculty_id, in_group) VALUES ('{}', {}, '{}');".format(tg_chat_id,
-                                                                                                   faculty_id, group)
-    db.execute_query(query)
+    query = 'SELECT * FROM users WHERE in_group="{}"'.format(group.lower())
+    res = db.execute_read_query(query)
+    if len(res) == 0:
+        query = "INSERT INTO users (tg_chat_id, faculty_id, in_group) VALUES ('{}', {}, '{}');".format(tg_chat_id,
+                                                                                                       faculty_id,
+                                                                                                       group.lower())
+        db.execute_query(query)
+        return True
+    else:
+        return False
+
 
 def back_to_start(tg_chat_id, bot: TeleBot):
     markup = types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=False)
@@ -36,13 +42,29 @@ def back_to_start(tg_chat_id, bot: TeleBot):
     bot.send_message(tg_chat_id, answ.need_registartion, parse_mode="MarkdownV2",
                      reply_markup=markup)
 
+
+def get_faculty_by_st(login):
+    pattern_st = r'^st[0-9]{6}$'
+    id = 0
+    if not re.search(pattern_st, login.lower()) is None:
+        query = 'SELECT faculty FROM stBase WHERE login=\'{}\''.format(login.lower())
+        result = db.execute_read_query(query)
+        if len(result) > 0:
+            id = result[0][0]
+    elif login == '👤 Я сотрудник':
+        id = 31
+    elif login == '👨‍🎓 I am a foreign student':
+        id = 20
+    elif login == '⏪ Cancel':
+        id = -1
+    return id
+
+
 def get_faculty_by_group(group):
     faculty_letter = {
         "пу": 22, "с": 5, "б": 17, "в": 11, "вшж": 21, "и": 16, "ии": 10, "вк": 10, "ики": 27, "мкн": 23, "мм": 15,
-        "м": 1,
-        "мо": 7, "вшм": 18, "нз": 3, "ип": 25, "фл": 19, "си": 26, "пл": 13, "пс": 6, "ст": 8, "фз": 9, "иф": 4,
-        "х": 24,
-        "э": 14, "ю": 12
+        "м": 1, "мо": 7, "вшм": 18, "нз": 3, "ип": 25, "фл": 19, "си": 26, "пл": 13, "пс": 6, "ст": 8, "фз": 9, "иф": 4,
+        "х": 24, "э": 14, "ю": 12
     }
     inyaz = ['19.Б04-с', '19.Б05-э', '19.Б06-э', '20.Б01-мо', '20.Б05-вшм', '20.Б06-э', '20.Б07-э', '20.Б08-э',
              '20.Б09-э',
@@ -60,7 +82,6 @@ def get_faculty_by_group(group):
     pattern_stom_1 = r'^2[0-1]\.ос\..+$'
     pattern_stom_2 = r'^[12][109]\.астом$'
     pattern_spo_med_stom = r'^[12]\-[12][016789]$'
-
 
     id = 0
     # ИнЯз 2

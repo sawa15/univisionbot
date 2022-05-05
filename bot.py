@@ -70,8 +70,6 @@ def get_faculty_keyboard(event_id, tg_chat_id, row_width=3):
         conf_button = types.InlineKeyboardButton("☑️ Завершить голосование", callback_data="conf__{}".format(event_id))
         markup.add(conf_button)
 
-
-
     return markup
 
 
@@ -92,7 +90,6 @@ def get_num_voting_left(event_id, voted_list):
 
 
 def get_vote_message_text(event_id, tg_chat_id):
-
     voting_left = ''
     if lc.get_num_voting_records(tg_chat_id) == 0:
         voting_left = 'Вы ещё ни за кого не проголосовали.'
@@ -172,6 +169,7 @@ def result_handler(message: Message):
     else:
         bot.send_message(message.chat.id, "Эта команда не для тебя", reply_markup=answ.start_button())
 
+
 @bot.message_handler(commands=['vstart', 'vstop'])
 def vstart_handler(message: Message):
     if str(message.chat.id) in lc.admins:
@@ -179,7 +177,8 @@ def vstart_handler(message: Message):
         command = data[0]
         if not len(data) == 2:
             # можно будет выводить в будущем список эвентов
-            bot.send_message(message.chat.id, "введи id голосования {} <id>".format(command), reply_markup=answ.start_button())
+            bot.send_message(message.chat.id, "введи id голосования {} <id>".format(command),
+                             reply_markup=answ.start_button())
             return
         if not data[1].isnumeric():
             bot.send_message(message.chat.id, "в аргументе должно быть число", reply_markup=answ.start_button())
@@ -192,7 +191,6 @@ def vstart_handler(message: Message):
 
     else:
         bot.send_message(message.chat.id, "Эта команда не для тебя", reply_markup=answ.start_button())
-
 
 
 @bot.message_handler(commands=['admin'])
@@ -215,14 +213,21 @@ def result_handler(message: Message):
     bot.send_message(message.chat.id, "акт", reply_markup=answ.start_button())
 
 
-
 # Регистрация студентов, КИОшников и сотрудников
-def register_handler_student(message):
-    id = reg.get_faculty_by_group(message.text)
+def register_handler_student(message: Message):
+    # id = reg.get_faculty_by_group(message.text)
+    if message.text == '/reset' or message.text == '/start':
+        bot.send_message(message.chat.id, answ.start_text, reply_markup=answ.start_button())
+        return
 
-    if id == 0:
-        bot.send_message(message.chat.id, "Номер группы введён неправильно. Нужно писать в точности как в timetable.",
-                         reply_markup=types.ReplyKeyboardRemove())
+    id = reg.get_faculty_by_st(message.text)
+
+    if id == 0:  # если не определился факультет
+        markup = types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=False)
+        markup.add(types.KeyboardButton('👤 Я сотрудник'))
+        markup.add(types.KeyboardButton('👨‍🎓 I am a foreign student'))
+        bot.send_message(message.chat.id, "Такой логин не найден. Попробуй ещё раз",
+                         reply_markup=markup)
         bot.register_next_step_handler(message, register_handler_student)
         return
     # если сотрудник
@@ -243,11 +248,22 @@ def register_handler_student(message):
         bot.register_next_step_handler(message, register_handler_student_kio)
         return
 
-    print(u"{} --- {} @{} {} {}".format(message.text, lc.get_faculty_from_id_global(id), message.chat.username,
+    if not reg.write_register_info(message.chat.id, id, message.text):  # такой логин уже есть в базе
+        markup = types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=False)
+        markup.add(types.KeyboardButton('👤 Я сотрудник'))
+        markup.add(types.KeyboardButton('👨‍🎓 I am a foreign student'))
+        bot.send_message(message.chat.id, "Ползователь с таким st уже зарегистрирован. Повторите ввод",
+                         reply_markup=markup)
+        admin.alarma(
+            "Пытается ввести уже зарегистрированный {} id:{} {}\n\t@{} {} {}".format(
+                message.text, id, lc.get_faculty_from_id_global(id), message.from_user.username,
+                message.from_user.first_name, message.from_user.last_name))
+        bot.register_next_step_handler(message, register_handler_student)
+    else:  # регистрация прошла успешно
+        print(u"{} --- {} @{} {} {}".format(message.text, lc.get_faculty_from_id_global(id), message.chat.username,
                                             message.chat.first_name, message.chat.last_name))
-    bot.send_message(message.chat.id, "Поздравляю, ты справился с вводом номера группы. Жми на кнопку",
-                     reply_markup=answ.start_button(), parse_mode="Markdown")
-    reg.write_register_info(message.chat.id, id, message.text)
+        bot.send_message(message.chat.id, "Поздравляю, ты справился. Жми на кнопку",
+                         reply_markup=answ.start_button(), parse_mode="Markdown")
 
 
 def register_handler_student_kio(message):
@@ -272,8 +288,8 @@ def register_handler_student_kio(message):
         bot.register_next_step_handler(message, register_handler_student)
         return
     print(u"{} --- {} + КИО @{} {} {}".format(message.text, lc.get_faculty_from_id_global(id),
-                                                  message.from_user.username, message.chat.first_name,
-                                                  message.chat.last_name))
+                                              message.from_user.username, message.chat.first_name,
+                                              message.chat.last_name))
     bot.send_message(message.chat.id,
                      "Поздравляю, ты справился с вводом номера группы. Жми на кнопку".format(
                          lc.get_faculty_from_id_global(id)), reply_markup=answ.start_button(), parse_mode="Markdown")
@@ -286,10 +302,47 @@ def register_handler_student_empl(message):
         reg.back_to_start(message.chat.id, bot)
         bot.register_next_step_handler(message, register_handler_student)
         return
-    print(u"Сотрудник --- @{} {} {}".format(message.chat.username, message.chat.first_name, message.chat.last_name))
-    bot.send_message(message.chat.id, "Ура, можно перейти к голосованию\. Жми на кнопку",
-                     reply_markup=answ.start_button(), parse_mode="MarkdownV2")
-    reg.write_register_info(message.chat.id, 31, message.text)
+    if message.text == '/reset' or message.text == '/start':
+        bot.send_message(message.chat.id, answ.start_text, reply_markup=answ.start_button())
+        return
+
+    id = reg.get_faculty_by_st(message.text)
+    if not id == 0:  # если определился факультет, регистрируем как студента
+        if id == 31 or id == 20:
+            bot.send_message(message.chat.id, "А ты мелкик проказник. так нельзя!", reply_markup=answ.start_button())
+            return
+        else:
+            if not reg.write_register_info(message.chat.id, id, message.text):  # такой логин уже есть в базе
+                bot.send_message(message.chat.id, "Ползователь с таким st уже зарегистрирован. Повторите ввод")
+                admin.alarma(
+                    "Пытается ввести уже зарегистрированный {} id:{} {}\n\t@{} {} {}".format(
+                        message.text, id, lc.get_faculty_from_id_global(id), message.from_user.username,
+                        message.from_user.first_name, message.from_user.last_name))
+                bot.register_next_step_handler(message, register_handler_student_empl)
+            else:  # регистрация прошла успешно
+                print(u"{} --- {} @{} {} {}".format(message.text, lc.get_faculty_from_id_global(id),
+                                                    message.chat.username,
+                                                    message.chat.first_name, message.chat.last_name))
+                bot.send_message(message.chat.id, "Поздравляю, ты справился. Жми на кнопку",
+                                 reply_markup=answ.start_button(), parse_mode="Markdown")
+        return
+    # если в базе нет, значит сотрудник
+    else:
+        if not reg.write_register_info(message.chat.id, 31, message.text):  # такой логин уже есть в базе
+            bot.send_message(message.chat.id, "Ползователь с таким st уже зарегистрирован. Повторите ввод")
+            admin.alarma(
+                "Пытается ввести уже зарегистрированный {} id:{} {}\n\t@{} {} {}".format(
+                    message.text, id, lc.get_faculty_from_id_global(id), message.from_user.username,
+                    message.from_user.first_name, message.from_user.last_name))
+            bot.register_next_step_handler(message, register_handler_student_empl)
+        else:  # регистрация прошла успешно
+            print(u"Сотрудник --- @{} {} {}".format(message.chat.username, message.chat.first_name,
+                                                    message.chat.last_name))
+            bot.send_message(message.chat.id, "Ура, можно перейти к голосованию\. Жми на кнопку",
+                             reply_markup=answ.start_button(), parse_mode="MarkdownV2")
+        return
+
+
 
 
 def all_inspections(event_id, tg_chat_id):
@@ -343,11 +396,9 @@ def callback_query(call):
         bot.register_next_step_handler(call.message, register_handler_student)
         return
 
-
-
     check_vote = lc.take_a_vote(call.from_user.id, call_faculty_id,
-                             "{} {}".format(call.from_user.first_name, call.from_user.last_name),
-                             call.from_user.username, call_event_id)
+                                "{} {}".format(call.from_user.first_name, call.from_user.last_name),
+                                call.from_user.username, call_event_id)
     if check_vote:
         bot.answer_callback_query(call.id, "✅ {}".format(lc.get_faculty_from_id(call_faculty_id)))
         print(u"@{username} проголосовал за {data} {first_name} {last_name} id:{id}".format(
@@ -382,16 +433,15 @@ def confirmation(call):
         bot.register_next_step_handler(call.message, register_handler_student)
         return
 
-
     if lc.confirm_vote(call.from_user.id):
         bot.answer_callback_query(call.id, "✅ Ваше голосование сохранено (нет)")
         sponsor = "\n\nА пока мы считаем голоса, можете познакомиться с партнёрской студией трансляций, которая помогла нам сегодня показать участников во всей красе: bzstream.ru"
-        #sponsor = ""
-        bot.send_message(call.from_user.id, "Спасибо, что проголосовали{}".format(sponsor), reply_markup=answ.start_button())
+        # sponsor = ""
+        bot.send_message(call.from_user.id, "Спасибо, что проголосовали{}".format(sponsor),
+                         reply_markup=answ.start_button())
     else:
         bot.answer_callback_query(call.id, "❌ Повторно сохранить нельзя")
     bot.delete_message(call.from_user.id, call.message.id)
-
 
 
 @bot.callback_query_handler(func=lambda call: re.match(r'^del__[0-9]+$', call.data) is not None)
