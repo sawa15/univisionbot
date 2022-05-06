@@ -267,34 +267,38 @@ def register_handler_student(message: Message):
 
 
 def register_handler_student_kio(message):
-    id = reg.get_faculty_by_group(message.text)
-    if id == 0:
-        bot.send_message(message.chat.id, "Номер группы введён неправильно. Нужно писать в точности как в timetable.",
-                         reply_markup=types.ReplyKeyboardRemove())
-        bot.register_next_step_handler(message, register_handler_student_kio)
-        return
-    # если сотрудник
-    elif id == 31:
-        bot.send_message(message.chat.id, "А ты мелкик проказник. так нельзя!", reply_markup=answ.start_button())
-        return
-    # если КИО
-    elif id == 20:
-        bot.send_message(message.chat.id, answ.need_registartion_eng, reply_markup=types.ReplyKeyboardRemove())
-        bot.register_next_step_handler(message, register_handler_student_kio)
-        return
-    # вернуться в начало
-    elif id == -1:
+    if message.text == '⏪ Cancel':
         reg.back_to_start(message.chat.id, bot)
         bot.register_next_step_handler(message, register_handler_student)
         return
-    print(u"{} --- {} + КИО @{} {} {}".format(message.text, lc.get_faculty_from_id_global(id),
-                                              message.from_user.username, message.chat.first_name,
-                                              message.chat.last_name))
-    bot.send_message(message.chat.id,
-                     "Поздравляю, ты справился с вводом номера группы. Жми на кнопку".format(
-                         lc.get_faculty_from_id_global(id)), reply_markup=answ.start_button(), parse_mode="Markdown")
-    reg.write_register_info(message.chat.id, id, message.text)
-    reg.write_register_info(message.chat.id, 20, message.text)
+    if message.text == '/reset' or message.text == '/start':
+        bot.send_message(message.chat.id, answ.start_text, reply_markup=answ.start_button())
+        return
+
+    id = reg.get_faculty_by_st(message.text)
+
+    if id == 0:  # если не определился факультет
+        bot.send_message(message.chat.id, "Такой логин не найден. Попробуй ещё раз")
+        bot.register_next_step_handler(message, register_handler_student_kio)
+        return
+    # если сотрудник или КИО, то  он плохой
+    elif id == 31 or id == 20:
+        bot.send_message(message.chat.id, "А ты мелкик проказник. так нельзя!", reply_markup=answ.start_button())
+        return
+
+    if not reg.write_register_info(message.chat.id, id, message.text):  # такой логин уже есть в базе
+        bot.send_message(message.chat.id, "Ползователь с таким st уже зарегистрирован. Повторите ввод")
+        admin.alarma(
+            "КИО Пытается ввести уже зарегистрированный {} id:{} {}\n\t@{} {} {}".format(
+                message.text, id, lc.get_faculty_from_id_global(id), message.from_user.username,
+                message.from_user.first_name, message.from_user.last_name))
+        bot.register_next_step_handler(message, register_handler_student_kio)
+    else:  # регистрация прошла успешно
+        print(u"{} --- КИО + {} @{} {} {}".format(message.text, lc.get_faculty_from_id_global(id), message.chat.username,
+                                            message.chat.first_name, message.chat.last_name))
+        bot.send_message(message.chat.id, "Поздравляю, ты справился. Жми на кнопку",
+                         reply_markup=answ.start_button(), parse_mode="Markdown")
+        reg.write_register_info(message.chat.id, 20, message.text, True)
 
 
 def register_handler_student_empl(message):
@@ -341,8 +345,6 @@ def register_handler_student_empl(message):
             bot.send_message(message.chat.id, "Ура, можно перейти к голосованию\. Жми на кнопку",
                              reply_markup=answ.start_button(), parse_mode="MarkdownV2")
         return
-
-
 
 
 def all_inspections(event_id, tg_chat_id):

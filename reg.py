@@ -22,10 +22,10 @@ def is_registered(tg_chat_id):
     return len(result) > 0
 
 
-def write_register_info(tg_chat_id, faculty_id, group):
+def write_register_info(tg_chat_id, faculty_id, group, ignore = False):
     query = 'SELECT * FROM users WHERE in_group="{}"'.format(group.lower())
     res = db.execute_read_query(query)
-    if len(res) == 0:
+    if len(res) == 0 or ignore:
         query = "INSERT INTO users (tg_chat_id, faculty_id, in_group) VALUES ('{}', {}, '{}');".format(tg_chat_id,
                                                                                                        faculty_id,
                                                                                                        group.lower())
